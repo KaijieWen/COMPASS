@@ -1,0 +1,756 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(0 0% 3.9%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(0 0% 3.9%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(0 0% 3.9%);
+  --primary: hsl(0 0% 9%);
+  --primary-foreground: hsl(0 0% 98%);
+  --secondary: hsl(0 0% 96.1%);
+  --secondary-foreground: hsl(0 0% 9%);
+  --muted: hsl(0 0% 96.1%);
+  --muted-foreground: hsl(0 0% 45.1%);
+  --accent: hsl(0 0% 96.1%);
+  --accent-foreground: hsl(0 0% 9%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(0 0% 89.8%);
+  --input: hsl(0 0% 89.8%);
+  --ring: hsl(0 0% 3.9%);
+}
+
+html,
+body,
+#root {
+  min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(1200px 700px at 12% -10%, rgba(90, 159, 184, 0.22), transparent 62%),
+    radial-gradient(1000px 620px at 88% 2%, rgba(225, 161, 133, 0.18), transparent 60%),
+    linear-gradient(180deg, #f3f7fb 0%, #ebf1f6 100%);
+  background-attachment: fixed;
+  color: var(--foreground);
+}
+
+#root {
+  background: transparent;
+}
+
+/* ========================================
+   FLYER THEMES
+   ======================================== */
+
+.flyer-output {
+  --flyer-paper: #EFE5DB;
+  --flyer-accent: #E1A185;
+  --flyer-accent-light: #efe3d8;
+  --flyer-section-bg: #fff;
+  --flyer-day-1: #f0d8c7;
+  --flyer-day-2: #bdb8b5;
+  --flyer-day-3: #E1A185;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.flyer-output.theme-current,
+.flyer-output[data-theme="current"] {
+  --flyer-paper: #EFE5DB;
+  --flyer-accent: #E1A185;
+  --flyer-accent-light: #efe3d8;
+  --flyer-day-1: #f0d8c7;
+  --flyer-day-2: #bdb8b5;
+  --flyer-day-3: #E1A185;
+}
+
+.flyer-output.theme-ocean,
+.flyer-output[data-theme="ocean"] {
+  --flyer-paper: #e8f4f8;
+  --flyer-accent: #5a9fb8;
+  --flyer-accent-light: #e0f2f7;
+  --flyer-day-1: #b8e0ec;
+  --flyer-day-2: #7eb8d0;
+  --flyer-day-3: #4a9bb8;
+}
+
+.flyer-output.theme-forest,
+.flyer-output[data-theme="forest"] {
+  --flyer-paper: #eef5eb;
+  --flyer-accent: #5a8f5a;
+  --flyer-accent-light: #e8f0e4;
+  --flyer-day-1: #c5e0b8;
+  --flyer-day-2: #8fb87e;
+  --flyer-day-3: #6b9e5a;
+}
+
+.flyer-output.theme-lavender,
+.flyer-output[data-theme="lavender"] {
+  --flyer-paper: #f5f0f8;
+  --flyer-accent: #8b7a9e;
+  --flyer-accent-light: #f0e8f5;
+  --flyer-day-1: #e0d4ec;
+  --flyer-day-2: #b8a8c8;
+  --flyer-day-3: #9b85b0;
+}
+
+/* ========================================
+   FLYER PAGE LAYOUT
+   ======================================== */
+
+.flyer-page {
+  width: 8.5in;
+  height: 11in;
+  max-width: 100%;
+  margin: 0 auto 24px;
+  background: var(--flyer-paper);
+  padding: 0.3in;
+  box-sizing: border-box;
+  font-size: 11pt;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+.flyer-break {
+  break-before: page;
+  page-break-before: always;
+}
+
+@media screen {
+  .flyer-page {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+}
+
+/* ========================================
+   FLYER HEADER
+   ======================================== */
+
+.flyer-header {
+  background: var(--flyer-section-bg);
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  border: 1px solid var(--flyer-accent);
+}
+
+.flyer-header-inner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.flyer-header-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.flyer-header-photo {
+  width: 1.15in;
+  height: 1.15in;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--flyer-accent);
+  flex-shrink: 0;
+}
+
+.flyer-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.flyer-name {
+  margin: 0;
+  font-size: 24pt;
+  font-weight: 700;
+  color: var(--flyer-accent);
+}
+
+.flyer-dob {
+  font-weight: 600;
+  font-size: 12pt;
+}
+
+.flyer-subheader {
+  margin-top: 4px;
+  font-size: 10pt;
+  color: #666;
+}
+
+.flyer-subheader span + span::before {
+  content: " | ";
+}
+
+/* ========================================
+   FLYER SECTIONS
+   ======================================== */
+
+.flyer-section {
+  background: var(--flyer-section-bg);
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+}
+
+.flyer-section-title {
+  margin: 0 0 8px 0;
+  font-size: 12pt;
+  font-weight: 700;
+  color: var(--flyer-accent);
+  border-bottom: 1px solid var(--flyer-accent-light);
+  padding-bottom: 4px;
+}
+
+/* ========================================
+   MEDICAL SECTION
+   ======================================== */
+
+.flyer-medical {
+  border-color: var(--flyer-accent);
+  border-width: 2px;
+}
+
+.flyer-medical-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.flyer-field {
+  display: flex;
+  gap: 6px;
+  font-size: 10pt;
+}
+
+.flyer-field strong {
+  flex-shrink: 0;
+  min-width: 120px;
+}
+
+.flyer-adverse {
+  background: #fff5f5;
+  border: 1px solid #e0a0a0;
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin: 2px 0;
+}
+
+.flyer-adverse strong {
+  color: #b22222;
+}
+
+.flyer-adverse span {
+  color: #b22222;
+  font-weight: 600;
+}
+
+.flyer-polst-inline {
+  background: #e8f5e9;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #66a066;
+  margin: 2px 0;
+}
+
+.flyer-polst-inline strong {
+  color: #2e7d32;
+}
+
+.flyer-polst-inline span {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.flyer-inline-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.flyer-inline-list li::before {
+  content: "• ";
+  color: #888;
+}
+
+/* ========================================
+   ABOUT ME / SUMMARY
+   ======================================== */
+
+.flyer-about {
+  background: var(--flyer-accent-light);
+  border-color: var(--flyer-accent);
+}
+
+.flyer-summary {
+  margin: 0;
+  font-style: italic;
+  font-size: 11pt;
+  line-height: 1.5;
+}
+
+/* ========================================
+   CONTACT SECTION
+   ======================================== */
+
+.flyer-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 16px;
+}
+
+/* ========================================
+   CARE VALUES
+   ======================================== */
+
+.flyer-values-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.flyer-values-list li {
+  background: var(--flyer-accent-light);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 10pt;
+}
+
+/* ========================================
+   PERSONAL DETAILS
+   ======================================== */
+
+.flyer-personal {
+  background: #f8f4fb;
+  border-color: #9b6b9e;
+}
+
+.flyer-personal .flyer-section-title {
+  color: #7a5a8e;
+  border-bottom-color: #d4c4dc;
+}
+
+.flyer-personal p {
+  margin: 0;
+  font-size: 10pt;
+  line-height: 1.5;
+}
+
+.flyer-personal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 16px;
+}
+
+.flyer-span-full {
+  grid-column: 1 / -1;
+}
+
+/* ========================================
+   DAILY ROUTINE
+   ======================================== */
+
+.flyer-day {
+  background: #fffbf0;
+  border-color: #d4a574;
+}
+
+.flyer-day .flyer-section-title {
+  color: #a67c52;
+  border-bottom-color: #e8d4c0;
+}
+
+.flyer-routine-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flyer-routine-content p {
+  margin: 0;
+  font-size: 10pt;
+  line-height: 1.4;
+}
+
+.flyer-day-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.flyer-day-item {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 10pt;
+}
+
+.flyer-day-item strong {
+  display: block;
+  text-align: center;
+  margin-bottom: 4px;
+  font-size: 10pt;
+}
+
+.flyer-day-item p {
+  margin: 0;
+}
+
+.flyer-day-morning {
+  background: var(--flyer-day-1);
+}
+
+.flyer-day-midday {
+  background: var(--flyer-day-2);
+}
+
+.flyer-day-evening {
+  background: var(--flyer-day-3);
+  color: #fff;
+}
+
+/* ========================================
+   LIST SECTIONS (Likes, Dislikes, etc.)
+   ======================================== */
+
+.flyer-likes,
+.flyer-dislikes,
+.flyer-helps,
+.flyer-struggles {
+  padding: 8px 14px;
+}
+
+.flyer-section ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.flyer-section li {
+  margin: 2px 0;
+  font-size: 10pt;
+}
+
+.flyer-likes {
+  background: #f0fff0;
+  border-color: #a0c0a0;
+}
+
+.flyer-likes .flyer-section-title {
+  color: #5a8a5a;
+  border-bottom-color: #c0e0c0;
+}
+
+.flyer-dislikes {
+  background: #fff5f5;
+  border-color: #e0a0a0;
+}
+
+.flyer-dislikes .flyer-section-title {
+  color: #a05050;
+  border-bottom-color: #f0d0d0;
+}
+
+.flyer-helps {
+  background: #f0fff0;
+  border-color: #a0c0a0;
+}
+
+.flyer-helps .flyer-section-title {
+  color: #5a8a5a;
+}
+
+.flyer-struggles {
+  background: #fffaf0;
+  border-color: #d0b080;
+}
+
+.flyer-struggles .flyer-section-title {
+  color: #8a7040;
+}
+
+/* ========================================
+   PROVIDERS TABLE
+   ======================================== */
+
+.flyer-providers {
+  padding: 10px 14px;
+}
+
+.flyer-providers table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10pt;
+}
+
+.flyer-providers th,
+.flyer-providers td {
+  padding: 4px 8px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.flyer-providers th {
+  font-weight: 700;
+  background: var(--flyer-accent-light);
+}
+
+.flyer-providers tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ========================================
+   DATE STAMP
+   ======================================== */
+
+.flyer-datestamp {
+  text-align: right;
+  font-size: 8pt;
+  color: #999;
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* ========================================
+   COMPACT MODE
+   ======================================== */
+
+.flyer-compact .flyer-page {
+  font-size: 9pt;
+  padding: 0.3in;
+  line-height: 1.3;
+}
+
+.flyer-compact .flyer-name {
+  font-size: 18pt;
+}
+
+.flyer-compact .flyer-section {
+  padding: 6px 10px;
+  margin-bottom: 6px;
+}
+
+.flyer-compact .flyer-section-title {
+  font-size: 10pt;
+  margin-bottom: 4px;
+  padding-bottom: 2px;
+}
+
+.flyer-compact .flyer-field {
+  font-size: 8pt;
+  gap: 4px;
+}
+
+.flyer-compact .flyer-field strong {
+  min-width: 90px;
+}
+
+.flyer-compact .flyer-summary {
+  font-size: 9pt;
+  line-height: 1.3;
+}
+
+.flyer-compact .flyer-values-list li {
+  font-size: 8pt;
+  padding: 1px 6px;
+}
+
+.flyer-compact .flyer-section ul {
+  padding-left: 14px;
+}
+
+.flyer-compact .flyer-section li {
+  font-size: 8pt;
+  margin: 1px 0;
+}
+
+.flyer-compact .flyer-header {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.flyer-compact .flyer-header-photo {
+  width: 0.95in;
+  height: 0.95in;
+}
+
+.flyer-compact .flyer-dob {
+  font-size: 10pt;
+}
+
+.flyer-compact .flyer-subheader {
+  font-size: 8pt;
+}
+
+.flyer-compact .flyer-contact-grid {
+  gap: 4px 12px;
+}
+
+.flyer-compact .flyer-routine-content p {
+  margin: 2px 0;
+  font-size: 8pt;
+}
+
+.flyer-compact .flyer-datestamp {
+  margin-top: 8px;
+  padding-top: 4px;
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@page {
+  size: letter;
+  margin: 0;
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html, body {
+    width: 8.5in;
+    height: 11in;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  .flyer-output {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .flyer-page {
+    width: 8.5in !important;
+    height: 11in !important;
+    margin: 0 !important;
+    padding: 0.3in !important;
+    background: var(--flyer-paper) !important;
+    box-shadow: none !important;
+    page-break-after: always;
+    overflow: hidden !important;
+  }
+
+  .flyer-page:last-child {
+    page-break-after: auto;
+  }
+
+  .flyer-header {
+    background: var(--flyer-section-bg) !important;
+    border: 1px solid var(--flyer-accent) !important;
+  }
+
+  .flyer-header-photo {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .flyer-section {
+    background: var(--flyer-section-bg) !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .flyer-medical {
+    border-color: var(--flyer-accent) !important;
+    border-width: 2px !important;
+  }
+
+  .flyer-about {
+    background: var(--flyer-accent-light) !important;
+    border-color: var(--flyer-accent) !important;
+  }
+
+  .flyer-adverse {
+    background: #fff5f5 !important;
+    border: 1px solid #e0a0a0 !important;
+  }
+
+  .flyer-polst-inline {
+    background: #e8f5e9 !important;
+    border: 1px solid #66a066 !important;
+  }
+
+  .flyer-likes {
+    background: #f0fff0 !important;
+    border-color: #a0c0a0 !important;
+  }
+
+  .flyer-dislikes {
+    background: #fff5f5 !important;
+    border-color: #e0a0a0 !important;
+  }
+
+  .flyer-personal {
+    background: #f8f4fb !important;
+    border-color: #9b6b9e !important;
+  }
+
+  .flyer-day {
+    background: #fffbf0 !important;
+    border-color: #d4a574 !important;
+  }
+
+  .flyer-values-list li {
+    background: var(--flyer-accent-light) !important;
+  }
+
+  .flyer-providers th {
+    background: var(--flyer-accent-light) !important;
+  }
+
+  .flyer-break {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .flyer-name {
+    color: var(--flyer-accent) !important;
+  }
+
+  .flyer-section-title {
+    color: var(--flyer-accent) !important;
+  }
+}
