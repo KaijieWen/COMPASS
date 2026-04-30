@@ -25,6 +25,7 @@ const INITIAL_DATA: FlyerData = {
   dislikesAndTriggers: '',
   personalBackground: '',
   compactMode: false,
+  sectionOrder: [],
 }
 
 const STORAGE_KEY = 'patient-flyer-draft'
@@ -116,7 +117,12 @@ function App() {
   if (showFlyer) {
     return (
       <div className="min-h-screen bg-[radial-gradient(1200px_700px_at_12%_-10%,rgba(56,189,248,0.35),transparent_62%),radial-gradient(1000px_620px_at_88%_2%,rgba(251,146,60,0.30),transparent_60%),linear-gradient(180deg,#dbeafe_0%,#e2e8f0_45%,#cbd5e1_100%)] print:bg-white print:p-0">
-        <FlyerPreview ref={flyerRef} data={data} visible={true} />
+        <FlyerPreview
+          ref={flyerRef}
+          data={data}
+          visible={true}
+          onChange={setData}
+        />
         <div className="print:hidden py-6 px-6 flex justify-center gap-4 flex-wrap">
           <button
             onClick={handleBackToForm}

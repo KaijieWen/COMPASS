@@ -6,82 +6,94 @@ interface ExportOptions {
   quality?: number
 }
 
+/**
+ * Capture the flyer element as a tall canvas and slice it into letter-size PDF pages.
+ * This handles arbitrary content lengths (e.g. after drag-and-drop reorder) without
+ * relying on a fixed multi-page DOM structure.
+ */
 export async function exportToPdf(
   element: HTMLElement,
   options: ExportOptions = {}
 ): Promise<void> {
   const { filename = 'patient-flyer.pdf', quality = 2 } = options
 
-  const pages = element.querySelectorAll('.flyer-page')
-  
-  if (pages.length === 0) {
-    console.error('No flyer pages found')
-    return
-  }
-
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'in',
-    format: 'letter',
+  // Hide any UI-only elements (e.g. drag handles) during capture.
+  const hidden = Array.from(
+    element.querySelectorAll<HTMLElement>('[data-export-hide="true"]')
+  )
+  const previousVisibility = hidden.map((el) => el.style.visibility)
+  hidden.forEach((el) => {
+    el.style.visibility = 'hidden'
   })
 
-  const pageWidth = 8.5
-  const pageHeight = 11
+  const pages = Array.from(element.querySelectorAll<HTMLElement>('.flyer-page'))
+  if (!pages.length) {
+    throw new Error('No flyer pages found for export.')
+  }
 
-  for (let i = 0; i < pages.length; i++) {
-    const page = pages[i] as HTMLElement
+  // Keep original inline styles so we can restore after export.
+  const originalPageStyles = pages.map((page) => ({
+    height: page.style.height,
+    minHeight: page.style.minHeight,
+    overflow: page.style.overflow,
+  }))
 
-    const canvas = await html2canvas(page, {
-      scale: quality,
-      useCORS: true,
-      logging: false,
-      backgroundColor: null,
-      windowWidth: page.scrollWidth,
-      windowHeight: page.scrollHeight,
+  // During export, normalize page geometry for consistent output.
+  pages.forEach((page) => {
+    page.style.height = '11in'
+    page.style.minHeight = '11in'
+    page.style.overflow = 'hidden'
+  })
+
+  try {
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'in',
+      format: 'letter',
     })
 
-    const imgWidth = pageWidth
-    const imgHeight = (canvas.height * pageWidth) / canvas.width
+    const pageWidthIn = 8.5
+    const pageHeightIn = 11
 
-    if (i > 0) {
-      pdf.addPage()
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i]
+      const canvas = await html2canvas(page, {
+        scale: quality,
+        useCORS: true,
+        logging: false,
+        backgroundColor: null,
+        windowWidth: page.scrollWidth,
+        windowHeight: page.scrollHeight,
+      })
+
+      if (i > 0) {
+        pdf.addPage()
+      }
+
+      // Fit image to page width and cap to page height.
+      const imgHeightIn = Math.min(
+        pageHeightIn,
+        (canvas.height * pageWidthIn) / canvas.width
+      )
+      pdf.addImage(
+        canvas.toDataURL('image/jpeg', 0.95),
+        'JPEG',
+        0,
+        0,
+        pageWidthIn,
+        imgHeightIn
+      )
     }
 
-    // No offset - start at top left corner for printer-ready output
-    pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, imgWidth, Math.min(imgHeight, pageHeight))
+    pdf.save(filename)
+  } finally {
+    pages.forEach((page, i) => {
+      page.style.height = originalPageStyles[i].height
+      page.style.minHeight = originalPageStyles[i].minHeight
+      page.style.overflow = originalPageStyles[i].overflow
+    })
+    hidden.forEach((el, i) => {
+      el.style.visibility = previousVisibility[i]
+    })
   }
-
-  pdf.save(filename)
-}
-
-export async function exportSinglePageToPdf(
-  element: HTMLElement,
-  options: ExportOptions = {}
-): Promise<void> {
-  const { filename = 'patient-flyer.pdf', quality = 2 } = options
-
-  // Capture the entire element as a canvas
-  const canvas = await html2canvas(element, {
-    scale: quality,
-    useCORS: true,
-    logging: false,
-    backgroundColor: null,
-  })
-
-  // Create PDF with letter size
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'in',
-    format: 'letter',
-  })
-
-  const pageWidth = 8.5
-  const imgWidth = pageWidth
-  const imgHeight = (canvas.height * pageWidth) / canvas.width
-
-  // Add the image
-  const imgData = canvas.toDataURL('image/jpeg', 0.95)
-  pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight)
-
-  pdf.save(filename)
 }

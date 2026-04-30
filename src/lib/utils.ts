@@ -55,6 +55,8 @@ export interface FlyerData {
   dislikesAndTriggers: string
   personalBackground: string
   compactMode: boolean
+  /** Custom order for flyer content sections (stable section ids); empty means use default */
+  sectionOrder: string[]
 }
 
 export function buildSummary(data: FlyerData): string {

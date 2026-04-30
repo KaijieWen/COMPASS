@@ -147,6 +147,10 @@ body {
 @media screen {
   .flyer-page {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    /* Keep preview draggable without dead space between pages. */
+    height: auto;
+    min-height: 0;
+    overflow: visible;
   }
 }
 
@@ -221,6 +225,63 @@ body {
   border-radius: 6px;
   padding: 10px 14px;
   margin-bottom: 10px;
+  position: relative;
+}
+
+/* ========================================
+   DRAG-TO-REORDER (screen only)
+   ======================================== */
+
+.flyer-drag-handle {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  color: #999;
+  background: rgba(255, 255, 255, 0.7);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  user-select: none;
+  touch-action: none;
+}
+
+.flyer-section[data-draggable="true"]:hover .flyer-drag-handle,
+.flyer-section[data-dragging="true"] .flyer-drag-handle {
+  opacity: 1;
+}
+
+.flyer-drag-handle:hover {
+  color: #555;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.flyer-drag-handle:active {
+  cursor: grabbing;
+}
+
+.flyer-section[data-draggable="true"]:hover {
+  outline: 2px dashed var(--flyer-accent);
+  outline-offset: 2px;
+}
+
+.flyer-section[data-dragging="true"] {
+  opacity: 0.85;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+@media print {
+  .flyer-drag-handle {
+    display: none !important;
+  }
+  .flyer-section[data-draggable="true"]:hover {
+    outline: none !important;
+  }
 }
 
 .flyer-section-title {
@@ -663,13 +724,14 @@ body {
 
   .flyer-page {
     width: 8.5in !important;
-    height: 11in !important;
+    height: auto !important;
+    min-height: 11in !important;
     margin: 0 !important;
     padding: 0.3in !important;
     background: var(--flyer-paper) !important;
     box-shadow: none !important;
     page-break-after: always;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .flyer-page:last-child {
