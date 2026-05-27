@@ -17,7 +17,9 @@ import {
   SelectValue,
   Textarea,
 } from '@/components/ui'
+import { ThemePreviewBar } from '@/components/ThemePreviewBar'
 import type { FlyerData } from '@/lib/utils'
+import { FLYER_THEMES, getFlyerTheme } from '@/lib/themes'
 
 const MAX_PROFILE_PHOTO_BYTES = 2 * 1024 * 1024
 
@@ -449,13 +451,20 @@ export function FlyerForm({
                   onValueChange={(v) => update('theme', v as FlyerData['theme'])}
                 >
                   <SelectTrigger id="theme">
-                    <SelectValue />
+                    <div className="flex items-center gap-2">
+                      <ThemePreviewBar colors={getFlyerTheme(data.theme).preview} />
+                      <span>{getFlyerTheme(data.theme).label}</span>
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="current">Warm (Peach/Tan)</SelectItem>
-                    <SelectItem value="ocean">Cool (Ocean Blue)</SelectItem>
-                    <SelectItem value="forest">Natural (Forest Green)</SelectItem>
-                    <SelectItem value="lavender">Calm (Soft Lavender)</SelectItem>
+                    {FLYER_THEMES.map((theme) => (
+                      <SelectItem key={theme.id} value={theme.id} textValue={theme.label}>
+                        <div className="flex items-center gap-2">
+                          <ThemePreviewBar colors={theme.preview} />
+                          <span>{theme.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
