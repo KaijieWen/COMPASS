@@ -80,6 +80,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .flyer-output.theme-current,
@@ -137,6 +139,7 @@ body {
   font-size: 11pt;
   line-height: 1.4;
   overflow: hidden;
+  overflow-x: hidden;
 }
 
 .flyer-break {
@@ -150,7 +153,19 @@ body {
     /* Keep preview draggable without dead space between pages. */
     height: auto;
     min-height: 0;
-    overflow: visible;
+    overflow-x: hidden;
+    overflow-y: visible;
+    position: relative;
+  }
+
+  .flyer-page-boundary {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 11in;
+    border-bottom: 2px dashed #f59e0b;
+    pointer-events: none;
+    z-index: 1;
   }
 }
 
@@ -164,6 +179,11 @@ body {
   border-radius: 6px;
   margin-bottom: 12px;
   border: 1px solid var(--flyer-accent);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .flyer-header-inner {
@@ -191,6 +211,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  gap: 8px;
+  min-width: 0;
 }
 
 .flyer-name {
@@ -198,11 +220,17 @@ body {
   font-size: 24pt;
   font-weight: 700;
   color: var(--flyer-accent);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .flyer-dob {
   font-weight: 600;
   font-size: 12pt;
+  flex-shrink: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .flyer-subheader {
@@ -226,6 +254,23 @@ body {
   padding: 10px 14px;
   margin-bottom: 10px;
   position: relative;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Keep long/unbroken text inside section boxes */
+.flyer-section p,
+.flyer-section li,
+.flyer-section td,
+.flyer-section th,
+.flyer-section span,
+.flyer-summary {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 /* ========================================
@@ -275,12 +320,36 @@ body {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
+.flyer-section[data-overflow="true"] {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+  background: #fef2f2;
+}
+
+.flyer-section[data-overflow="true"]::after {
+  content: "Content may be cut off";
+  display: block;
+  font-size: 8pt;
+  color: #dc2626;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
 @media print {
   .flyer-drag-handle {
     display: none !important;
   }
   .flyer-section[data-draggable="true"]:hover {
     outline: none !important;
+  }
+  .flyer-section[data-overflow="true"]::after {
+    display: none !important;
+  }
+  .flyer-page-boundary {
+    display: none !important;
+  }
+  .flyer-measure-root {
+    display: none !important;
   }
 }
 
@@ -312,11 +381,20 @@ body {
   display: flex;
   gap: 6px;
   font-size: 10pt;
+  min-width: 0;
 }
 
 .flyer-field strong {
   flex-shrink: 0;
   min-width: 120px;
+}
+
+.flyer-field span,
+.flyer-field > span {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .flyer-adverse {
@@ -367,6 +445,12 @@ body {
   color: #888;
 }
 
+.flyer-inline-list li {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
+}
+
 /* ========================================
    ABOUT ME / SUMMARY
    ======================================== */
@@ -391,6 +475,11 @@ body {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 6px 16px;
+  min-width: 0;
+}
+
+.flyer-contact-grid > * {
+  min-width: 0;
 }
 
 /* ========================================
@@ -411,6 +500,9 @@ body {
   padding: 2px 10px;
   border-radius: 12px;
   font-size: 10pt;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 /* ========================================
@@ -576,6 +668,7 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 10pt;
+  table-layout: fixed;
 }
 
 .flyer-providers th,
@@ -583,6 +676,8 @@ body {
   padding: 4px 8px;
   text-align: left;
   border-bottom: 1px solid #e0e0e0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .flyer-providers th {
@@ -605,6 +700,23 @@ body {
   margin-top: 16px;
   padding-top: 8px;
   border-top: 1px solid #e0e0e0;
+}
+
+/* ========================================
+   LAYOUT MEASUREMENT (hidden)
+   ======================================== */
+
+.flyer-measure-root {
+  position: absolute;
+  left: -10000px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.flyer-layout-measure .flyer-page {
+  height: 11in;
+  min-height: 11in;
+  overflow: hidden;
 }
 
 /* ========================================
@@ -725,17 +837,20 @@ body {
   .flyer-page {
     width: 8.5in !important;
     height: auto !important;
-    min-height: 11in !important;
+    min-height: 0 !important;
     margin: 0 !important;
     padding: 0.3in !important;
     background: var(--flyer-paper) !important;
     box-shadow: none !important;
-    page-break-after: always;
+    page-break-after: auto;
+    break-after: auto;
     overflow: visible !important;
   }
 
-  .flyer-page:last-child {
-    page-break-after: auto;
+  /* Only break before page 2+ — avoid double breaks that insert blank pages */
+  .flyer-output > .flyer-page + .flyer-page {
+    break-before: page;
+    page-break-before: always;
   }
 
   .flyer-header {
@@ -801,11 +916,6 @@ body {
 
   .flyer-providers th {
     background: var(--flyer-accent-light) !important;
-  }
-
-  .flyer-break {
-    break-before: page;
-    page-break-before: always;
   }
 
   .flyer-name {

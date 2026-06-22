@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { FlyerForm } from '@/components/FlyerForm'
 import { FlyerPreview } from '@/components/FlyerPreview'
 import type { FlyerData } from '@/lib/utils'
-import { exportToPdf } from '@/lib/pdfExport'
+import { exportToPdf, FlyerLayoutError } from '@/lib/pdfExport'
+import type { LayoutIssue } from '@/lib/flyerLayout'
 
 const INITIAL_DATA: FlyerData = {
   theme: 'current',
@@ -59,7 +60,17 @@ function App() {
   const [showFlyer, setShowFlyer] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isExporting, setIsExporting] = useState(false)
+  const [layoutIssues, setLayoutIssues] = useState<LayoutIssue[]>([])
+  const [hasOverflow, setHasOverflow] = useState(false)
   const flyerRef = useRef<HTMLDivElement>(null)
+
+  const handleLayoutChange = useCallback(
+    (result: { issues: LayoutIssue[]; hasOverflow: boolean }) => {
+      setLayoutIssues(result.issues)
+      setHasOverflow(result.hasOverflow)
+    },
+    []
+  )
 
   // Auto-save to localStorage whenever data changes
   useEffect(() => {
@@ -88,8 +99,8 @@ function App() {
   }
 
   const handleDownloadPdf = async () => {
-    if (!flyerRef.current) return
-    
+    if (!flyerRef.current || hasOverflow) return
+
     setIsExporting(true)
     try {
       const patientName = data.preferredName.trim() || 'patient'
@@ -100,7 +111,15 @@ function App() {
       })
     } catch (error) {
       console.error('Failed to export PDF:', error)
-      alert('Failed to generate PDF. Please try again or use Print.')
+      if (error instanceof FlyerLayoutError) {
+        setLayoutIssues(error.issues)
+        setHasOverflow(true)
+        alert(
+          'Cannot download PDF — some content will be cut off. Fix the highlighted sections in the preview, then try again.'
+        )
+      } else {
+        alert('Failed to generate PDF. Please try again or use Print.')
+      }
     } finally {
       setIsExporting(false)
     }
@@ -122,8 +141,45 @@ function App() {
           data={data}
           visible={true}
           onChange={setData}
+          onLayoutChange={handleLayoutChange}
         />
-        <div className="print:hidden py-6 px-6 flex justify-center gap-4 flex-wrap">
+        {hasOverflow && (
+          <div className="print:hidden max-w-3xl mx-auto px-6 -mt-2 mb-2">
+            <div
+              role="alert"
+              className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900"
+            >
+              <p className="font-semibold mb-2">
+                Some content will be cut off in the PDF.
+              </p>
+              <ul className="list-disc pl-5 space-y-1">
+                {layoutIssues.map((issue, i) => (
+                  <li key={`${issue.type}-${issue.sectionId ?? ''}-${i}`}>
+                    {issue.message}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-red-800">
+                Drag sections using the grip handle on the left to rebalance pages, or{' '}
+                <button
+                  type="button"
+                  onClick={handleBackToForm}
+                  className="underline font-medium hover:text-red-950"
+                >
+                  go back to the form
+                </button>{' '}
+                to shorten text.
+              </p>
+            </div>
+          </div>
+        )}
+        <div className="print:hidden py-6 px-6 flex flex-col items-center gap-3">
+          {hasOverflow && (
+            <p className="text-sm text-red-600 font-medium">
+              Fix layout issues before downloading.
+            </p>
+          )}
+          <div className="flex justify-center gap-4 flex-wrap">
           <button
             onClick={handleBackToForm}
             className="px-6 py-3 text-sm font-medium border border-gray-300 bg-white rounded-lg hover:bg-gray-50 transition-colors"
@@ -132,8 +188,9 @@ function App() {
           </button>
           <button
             onClick={handleDownloadPdf}
-            disabled={isExporting}
+            disabled={isExporting || hasOverflow}
             className="px-6 py-3 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            title={hasOverflow ? 'Fix layout issues before downloading.' : undefined}
           >
             {isExporting ? (
               <>
@@ -152,6 +209,7 @@ function App() {
           >
             🖨️ Print
           </button>
+          </div>
         </div>
       </div>
     )

@@ -479,7 +479,7 @@ export function FlyerForm({
                   </span>
                 </label>
                 <p className="text-xs text-muted-foreground ml-6">
-                  Use this when you need a one-page summary. Some details may be abbreviated.
+                  Fits on one page with smaller text. Very long entries may still overflow — you&apos;ll see a warning on the flyer preview.
                 </p>
               </div>
             </div>

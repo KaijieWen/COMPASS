@@ -1,4 +1,4 @@
-import { forwardRef, useMemo } from 'react'
+import { forwardRef, useMemo, useRef } from 'react'
 import {
   DndContext,
   PointerSensor,
@@ -16,6 +16,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { useFlyerLayout } from '@/hooks/useFlyerLayout'
+import type { LayoutIssue } from '@/lib/flyerLayout'
 import { lines } from '@/lib/utils'
 import type { FlyerData } from '@/lib/utils'
 import { buildSummary } from '@/lib/utils'
@@ -30,6 +32,10 @@ interface FlyerPreviewProps {
   data: FlyerData
   visible: boolean
   onChange?: (next: FlyerData) => void
+  onLayoutChange?: (result: {
+    issues: LayoutIssue[]
+    hasOverflow: boolean
+  }) => void
 }
 
 interface SectionItem {
@@ -81,10 +87,11 @@ function DragHandle() {
 interface SortableSectionProps {
   id: string
   className: string
+  overflow?: boolean
   children: React.ReactNode
 }
 
-function SortableSection({ id, className, children }: SortableSectionProps) {
+function SortableSection({ id, className, overflow, children }: SortableSectionProps) {
   const {
     attributes,
     listeners,
@@ -105,8 +112,10 @@ function SortableSection({ id, className, children }: SortableSectionProps) {
       ref={setNodeRef}
       style={style}
       className={`flyer-section ${className}`}
+      data-section-id={id}
       data-draggable="true"
       data-dragging={isDragging ? 'true' : 'false'}
+      data-overflow={overflow ? 'true' : undefined}
       {...attributes}
       {...listeners}
     >
@@ -116,9 +125,38 @@ function SortableSection({ id, className, children }: SortableSectionProps) {
   )
 }
 
+function FlyerHeader({
+  data,
+}: {
+  data: FlyerData
+}) {
+  return (
+    <div className="flyer-header">
+      <div className="flyer-header-inner">
+        <div className="flyer-header-main">
+          <div className="flyer-name-row">
+            <h1 className="flyer-name">{data.preferredName || 'Patient Name'}</h1>
+            <div className="flyer-dob">DOB: {data.dob || '—'}</div>
+          </div>
+          <div className="flyer-subheader">
+            {data.gender && <span>Gender: {data.gender}</span>}
+          </div>
+        </div>
+        {data.profilePhotoUrl ? (
+          <img
+            className="flyer-header-photo"
+            src={data.profilePhotoUrl}
+            alt=""
+          />
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
-  function FlyerPreview({ data, visible, onChange }, ref) {
-    if (!visible) return null
+  function FlyerPreview({ data, visible, onChange, onLayoutChange }, ref) {
+    const measureRootRef = useRef<HTMLDivElement>(null)
 
     const summary = buildSummary(data)
     const allCareValues = data.careValues
@@ -145,7 +183,6 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
     const compactClass = data.compactMode ? 'flyer-compact' : ''
     const lifeContextText = data.aboutMe || summary
 
-    // Build all possible section items with stable ids
     const allSections: SectionItem[] = useMemo(() => {
       const items: SectionItem[] = [
         {
@@ -374,7 +411,6 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
       showPolst,
     ])
 
-    // Compute effective order: saved order first, then any defaults not in saved order
     const effectiveOrder = useMemo(() => {
       const knownIds = new Set(allSections.map((s) => s.id))
       const fromSaved = (data.sectionOrder ?? []).filter((id) => knownIds.has(id))
@@ -384,7 +420,6 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
       return [...fromSaved, ...remaining]
     }, [data.sectionOrder, allSections])
 
-    // Build the final ordered list of visible sections
     const orderedSections = useMemo(() => {
       const sectionMap = new Map(allSections.map((s) => [s.id, s]))
       return effectiveOrder
@@ -392,16 +427,21 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
         .filter((s): s is SectionItem => !!s && s.visible)
     }, [effectiveOrder, allSections])
 
-    const sectionIds = orderedSections.map((s) => s.id)
-    const pageOneCount = 6
-    const pageOneSections =
-      data.compactMode || orderedSections.length <= pageOneCount
-        ? orderedSections
-        : orderedSections.slice(0, pageOneCount)
-    const pageTwoSections =
-      data.compactMode || orderedSections.length <= pageOneCount
-        ? []
-        : orderedSections.slice(pageOneCount)
+    const sectionIds = useMemo(
+      () => orderedSections.map((s) => s.id),
+      [orderedSections]
+    )
+    const sectionMap = useMemo(
+      () => new Map(orderedSections.map((s) => [s.id, s])),
+      [orderedSections]
+    )
+
+    const { pageGroups, overflowingSectionIds } = useFlyerLayout({
+      orderedSectionIds: sectionIds,
+      compactMode: data.compactMode,
+      measureRootRef,
+      onLayoutChange,
+    })
 
     const sensors = useSensors(
       useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -419,11 +459,8 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
       const newIndex = sectionIds.indexOf(String(over.id))
       if (oldIndex < 0 || newIndex < 0) return
 
-      // Build the new full order, applying the move within the visible subset,
-      // while preserving the relative position of any hidden ids in the saved order.
       const newVisibleOrder = arrayMove(sectionIds, oldIndex, newIndex)
 
-      // Reconstitute by interleaving hidden saved ids at their original positions
       const currentFullOrder = effectiveOrder
       const hiddenIds = currentFullOrder.filter((id) => !sectionIds.includes(id))
       const merged: string[] = []
@@ -439,73 +476,78 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
       onChange({ ...data, sectionOrder: merged })
     }
 
-    return (
-      <div
-        ref={ref}
-        id="flyer-output"
-        className={`flyer-output ${themeClass} ${compactClass}`}
-        data-theme={data.theme}
-      >
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
-            <div className="flyer-page">
-              {/* Locked header */}
-              <div className="flyer-header">
-                <div className="flyer-header-inner">
-                  <div className="flyer-header-main">
-                    <div className="flyer-name-row">
-                      <h1 className="flyer-name">{data.preferredName || 'Patient Name'}</h1>
-                      <div className="flyer-dob">DOB: {data.dob || '—'}</div>
-                    </div>
-                    <div className="flyer-subheader">
-                      {data.gender && <span>Gender: {data.gender}</span>}
-                    </div>
-                  </div>
-                  {data.profilePhotoUrl ? (
-                    <img
-                      className="flyer-header-photo"
-                      src={data.profilePhotoUrl}
-                      alt=""
-                    />
-                  ) : null}
-                </div>
-              </div>
+    const displayPageGroups =
+      pageGroups.length > 0 ? pageGroups.slice(0, 2) : [sectionIds]
 
-              {pageOneSections.map((section) => (
-                <SortableSection
+    if (!visible) return null
+
+    return (
+      <>
+        {/* Hidden measurement container — export-equivalent geometry */}
+        <div
+          ref={measureRootRef}
+          className="flyer-measure-root flyer-layout-measure"
+          aria-hidden="true"
+        >
+          <div className={`flyer-output ${themeClass} ${compactClass}`}>
+            <div className="flyer-page">
+              <FlyerHeader data={data} />
+              {orderedSections.map((section) => (
+                <div
                   key={section.id}
-                  id={section.id}
-                  className={section.className}
+                  className={`flyer-section ${section.className}`}
+                  data-section-id={section.id}
                 >
                   {section.render()}
-                </SortableSection>
+                </div>
               ))}
-
-              {/* Locked date stamp */}
               <div className="flyer-datestamp">Generated: {generatedDate}</div>
             </div>
+          </div>
+        </div>
 
-            {!data.compactMode && pageTwoSections.length > 0 && (
-              <div className="flyer-page flyer-break">
-                {pageTwoSections.map((section) => (
-                  <SortableSection
-                    key={section.id}
-                    id={section.id}
-                    className={section.className}
-                  >
-                    {section.render()}
-                  </SortableSection>
-                ))}
-                <div className="flyer-datestamp">Generated: {generatedDate}</div>
-              </div>
-            )}
-          </SortableContext>
-        </DndContext>
-      </div>
+        <div
+          ref={ref}
+          id="flyer-output"
+          className={`flyer-output ${themeClass} ${compactClass}`}
+          data-theme={data.theme}
+        >
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
+              {displayPageGroups.map((sectionIdsOnPage, pageIndex) => (
+                <div
+                  key={pageIndex}
+                  className={`flyer-page ${pageIndex > 0 ? 'flyer-break' : ''}`}
+                >
+                  {pageIndex === 0 && <FlyerHeader data={data} />}
+
+                  {sectionIdsOnPage.map((id) => {
+                    const section = sectionMap.get(id)
+                    if (!section) return null
+                    return (
+                      <SortableSection
+                        key={section.id}
+                        id={section.id}
+                        className={section.className}
+                        overflow={overflowingSectionIds.has(section.id)}
+                      >
+                        {section.render()}
+                      </SortableSection>
+                    )
+                  })}
+
+                  <div className="flyer-datestamp">Generated: {generatedDate}</div>
+                  <div className="flyer-page-boundary" aria-hidden="true" />
+                </div>
+              ))}
+            </SortableContext>
+          </DndContext>
+        </div>
+      </>
     )
   }
 )
