@@ -232,9 +232,9 @@ function App() {
         </span>
         <button
           onClick={handleClearDraft}
-          className="text-red-500 hover:text-red-700 hover:underline"
+          className="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-300 rounded-md bg-red-50 hover:bg-red-100 hover:border-red-400 hover:text-red-700 transition-colors"
         >
-          Clear draft
+          🗑️ Clear Draft
         </button>
       </div>
     </div>
