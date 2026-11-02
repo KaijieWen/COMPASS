@@ -18,21 +18,10 @@ import {
   Textarea,
 } from '@/components/ui'
 import { ThemePreviewBar } from '@/components/ThemePreviewBar'
-import type { FlyerData } from '@/lib/utils'
+import { CARE_VALUES, type FlyerData } from '@/lib/utils'
 import { FLYER_THEMES, getFlyerTheme } from '@/lib/themes'
 
 const MAX_PROFILE_PHOTO_BYTES = 2 * 1024 * 1024
-
-const CARE_VALUES = [
-  'Dignity',
-  'Comfort',
-  'Safety',
-  'Independence',
-  'Family involvement',
-  'Spiritual support',
-  'Pain management',
-  'Quality of life',
-] as const
 
 const STEP_TITLES = [
   'Patient Identity',

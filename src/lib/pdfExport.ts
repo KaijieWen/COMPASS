@@ -4,10 +4,14 @@ import {
   getSectionLabel,
   type LayoutIssue,
 } from '@/lib/flyerLayout'
+import { encodeFlyerData } from '@/lib/flyerEmbed'
+import type { FlyerData } from '@/lib/utils'
 
 interface ExportOptions {
   filename?: string
   quality?: number
+  /** Embedded in the PDF so the flyer can be re-imported exactly later */
+  data?: FlyerData
 }
 
 export class FlyerLayoutError extends Error {
@@ -105,7 +109,7 @@ export async function exportToPdf(
   element: HTMLElement,
   options: ExportOptions = {}
 ): Promise<void> {
-  const { filename = 'patient-flyer.pdf', quality = 2 } = options
+  const { filename = 'patient-flyer.pdf', quality = 2, data } = options
 
   const overflowIssues = detectPageOverflow(element)
   if (overflowIssues.length > 0) {
@@ -143,6 +147,16 @@ export async function exportToPdf(
       unit: 'in',
       format: 'letter',
     })
+
+    if (data) {
+      pdf.setDocumentProperties({
+        title: data.preferredName.trim()
+          ? `Patient Flyer – ${data.preferredName.trim()}`
+          : 'Patient Flyer',
+        creator: 'Patient Flyer',
+        keywords: encodeFlyerData(data),
+      })
+    }
 
     const pageWidthIn = 8.5
     const pageHeightIn = 11

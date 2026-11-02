@@ -1,33 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { FlyerForm } from '@/components/FlyerForm'
 import { FlyerPreview } from '@/components/FlyerPreview'
-import type { FlyerData } from '@/lib/utils'
+import {
+  FlyerImport,
+  ImportNoticeBanner,
+  type ImportNotice,
+} from '@/components/FlyerImport'
+import { INITIAL_FLYER_DATA, type FlyerData } from '@/lib/utils'
 import { exportToPdf, FlyerLayoutError } from '@/lib/pdfExport'
 import type { LayoutIssue } from '@/lib/flyerLayout'
+import type { FlyerImportResult } from '@/lib/flyerImport/types'
 
-const INITIAL_DATA: FlyerData = {
-  theme: 'current',
-  profilePhotoUrl: '',
-  preferredName: '',
-  dob: '',
-  gender: '',
-  aboutMe: '',
-  diagnoses: '',
-  allergiesAndReactions: '',
-  medications: '',
-  polstStatus: 'omit',
-  primaryContact: '',
-  primaryCarePhysician: '',
-  otherProviders: '',
-  address: '',
-  careValues: [],
-  dailyRoutine: '',
-  likesAndComforts: '',
-  dislikesAndTriggers: '',
-  personalBackground: '',
-  compactMode: false,
-  sectionOrder: [],
-}
+const INITIAL_DATA = INITIAL_FLYER_DATA
 
 const STORAGE_KEY = 'patient-flyer-draft'
 
@@ -62,6 +46,7 @@ function App() {
   const [isExporting, setIsExporting] = useState(false)
   const [layoutIssues, setLayoutIssues] = useState<LayoutIssue[]>([])
   const [hasOverflow, setHasOverflow] = useState(false)
+  const [importNotice, setImportNotice] = useState<ImportNotice | null>(null)
   const flyerRef = useRef<HTMLDivElement>(null)
 
   const handleLayoutChange = useCallback(
@@ -108,6 +93,7 @@ function App() {
       await exportToPdf(flyerRef.current, {
         filename: `flyer-${safeName}.pdf`,
         quality: 2,
+        data,
       })
     } catch (error) {
       console.error('Failed to export PDF:', error)
@@ -130,7 +116,23 @@ function App() {
       localStorage.removeItem(STORAGE_KEY)
       setData(INITIAL_DATA)
       setStep(0)
+      setImportNotice(null)
     }
+  }
+
+  const handleImport = (result: FlyerImportResult, fileName: string) => {
+    const hasDraft = JSON.stringify(data) !== JSON.stringify(INITIAL_DATA)
+    if (
+      hasDraft &&
+      !confirm(
+        `Found ${result.filledFields.length} fields in "${fileName}". Replace what is currently in the form?`
+      )
+    ) {
+      return
+    }
+    setData(result.data)
+    setStep(0)
+    setImportNotice({ fileName, result })
   }
 
   if (showFlyer) {
@@ -217,6 +219,13 @@ function App() {
 
   return (
     <div className="min-h-screen py-6 px-4 bg-[radial-gradient(1200px_700px_at_12%_-10%,rgba(56,189,248,0.35),transparent_62%),radial-gradient(1000px_620px_at_88%_2%,rgba(251,146,60,0.30),transparent_60%),linear-gradient(180deg,#dbeafe_0%,#e2e8f0_45%,#cbd5e1_100%)]">
+      <FlyerImport onImport={handleImport} />
+      {importNotice && (
+        <ImportNoticeBanner
+          notice={importNotice}
+          onDismiss={() => setImportNotice(null)}
+        />
+      )}
       <FlyerForm
         data={data}
         onChange={setData}

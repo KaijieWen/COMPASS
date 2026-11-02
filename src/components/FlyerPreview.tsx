@@ -18,15 +18,9 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { useFlyerLayout } from '@/hooks/useFlyerLayout'
 import type { LayoutIssue } from '@/lib/flyerLayout'
-import { lines } from '@/lib/utils'
+import { lines, POLST_LABELS } from '@/lib/utils'
 import type { FlyerData } from '@/lib/utils'
 import { buildSummary } from '@/lib/utils'
-
-const POLST_LABELS: Record<string, string> = {
-  dnr: 'DNR (Do Not Resuscitate)',
-  selective: 'Selective Treatment',
-  'no-nutrition': 'Comfort Care Only',
-}
 
 interface FlyerPreviewProps {
   data: FlyerData
