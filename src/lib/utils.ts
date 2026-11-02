@@ -59,6 +59,49 @@ export interface FlyerData {
   sectionOrder: string[]
 }
 
+export const INITIAL_FLYER_DATA: FlyerData = {
+  theme: 'current',
+  profilePhotoUrl: '',
+  preferredName: '',
+  dob: '',
+  gender: '',
+  aboutMe: '',
+  diagnoses: '',
+  allergiesAndReactions: '',
+  medications: '',
+  polstStatus: 'omit',
+  primaryContact: '',
+  primaryCarePhysician: '',
+  otherProviders: '',
+  address: '',
+  careValues: [],
+  dailyRoutine: '',
+  likesAndComforts: '',
+  dislikesAndTriggers: '',
+  personalBackground: '',
+  compactMode: false,
+  sectionOrder: [],
+}
+
+export const CARE_VALUES = [
+  'Dignity',
+  'Comfort',
+  'Safety',
+  'Independence',
+  'Family involvement',
+  'Spiritual support',
+  'Pain management',
+  'Quality of life',
+] as const
+
+export const GENDER_OPTIONS = ['Male', 'Female', 'Other', 'Prefer not to say'] as const
+
+export const POLST_LABELS: Record<string, string> = {
+  dnr: 'DNR (Do Not Resuscitate)',
+  selective: 'Selective Treatment',
+  'no-nutrition': 'Comfort Care Only',
+}
+
 export function buildSummary(data: FlyerData): string {
   const age = getAge(data.dob)
   const gender = data.gender
